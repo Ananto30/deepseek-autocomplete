@@ -1,0 +1,172 @@
+{
+  "name": "deepseek-autocomplete",
+  "displayName": "DeepSeek Autocomplete",
+  "description": "Inline AI code suggestions powered by the DeepSeek API \u2014 ghost-text completions like GitHub Copilot, but using your own DeepSeek key.",
+  "version": "0.1.0",
+  "publisher": "local-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "deepseek",
+    "ai",
+    "autocomplete",
+    "copilot",
+    "inline completion",
+    "fim"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "deepseekAutocomplete.setApiKey",
+        "title": "DeepSeek: Set API Key"
+      },
+      {
+        "command": "deepseekAutocomplete.clearApiKey",
+        "title": "DeepSeek: Clear API Key"
+      },
+      {
+        "command": "deepseekAutocomplete.toggle",
+        "title": "DeepSeek: Toggle Inline Suggestions"
+      },
+      {
+        "command": "deepseekAutocomplete.openSettings",
+        "title": "DeepSeek: Open Settings"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "deepseekAutocomplete.toggle",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d"
+      }
+    ],
+    "configuration": {
+      "title": "DeepSeek Autocomplete",
+      "properties": {
+        "deepseekAutocomplete.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show automatic inline (ghost-text) suggestions from DeepSeek as you type. You can still toggle this from the status bar or with the 'DeepSeek: Toggle Inline Suggestions' command."
+        },
+        "deepseekAutocomplete.model": {
+          "type": "string",
+          "default": "deepseek-v4-flash",
+          "markdownDescription": "Which DeepSeek model to request completions from.\n\n- `deepseek-v4-flash` \u2014 fast and cheap, recommended for inline autocomplete.\n- `deepseek-v4-pro` \u2014 higher quality, slower and more expensive, useful if you want stronger suggestions and don't mind extra latency.\n\nLegacy names `deepseek-chat` / `deepseek-reasoner` still work but are scheduled for retirement by DeepSeek and currently just alias to `deepseek-v4-flash`."
+        },
+        "deepseekAutocomplete.baseUrl": {
+          "type": "string",
+          "default": "https://api.deepseek.com",
+          "description": "Root URL of the DeepSeek-compatible API. Only change this if you are using a proxy or a self-hosted/OpenAI-compatible gateway in front of DeepSeek."
+        },
+        "deepseekAutocomplete.completionMode": {
+          "type": "string",
+          "enum": [
+            "fim",
+            "chat"
+          ],
+          "enumDescriptions": [
+            "Fill-In-the-Middle: sends the code before and after the cursor to DeepSeek's /beta/completions endpoint. Fast, no chain-of-thought, closest to how editor autocomplete actually works.",
+            "Chat-style: wraps the surrounding code in a system/user prompt and calls /chat/completions. Use this if FIM ever misbehaves for your model/account."
+          ],
+          "default": "fim",
+          "description": "How completions are requested from DeepSeek. 'fim' is recommended."
+        },
+        "deepseekAutocomplete.enableThinking": {
+          "type": "boolean",
+          "default": false,
+          "description": "Only used when completionMode is 'chat'. DeepSeek V4 has 'thinking mode' on by default, which adds noticeable latency and cost \u2014 keep this off for snappy inline suggestions. Has no effect in 'fim' mode."
+        },
+        "deepseekAutocomplete.maxTokens": {
+          "type": "number",
+          "default": 256,
+          "minimum": 16,
+          "maximum": 2048,
+          "description": "Maximum number of tokens DeepSeek may generate for a single suggestion. Smaller is faster; larger allows longer multi-line suggestions."
+        },
+        "deepseekAutocomplete.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Sampling temperature. Lower values (0\u20130.3) give more predictable, conservative completions, which is usually what you want for code."
+        },
+        "deepseekAutocomplete.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "How long to wait after you stop typing before asking DeepSeek for a suggestion. Higher values reduce API usage but feel less responsive."
+        },
+        "deepseekAutocomplete.requestTimeoutMs": {
+          "type": "number",
+          "default": 8000,
+          "minimum": 1000,
+          "maximum": 60000,
+          "description": "How long to wait for a DeepSeek response before giving up on a suggestion."
+        },
+        "deepseekAutocomplete.contextLinesBefore": {
+          "type": "number",
+          "default": 100,
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Number of lines before the cursor (in the current file) to send as context."
+        },
+        "deepseekAutocomplete.contextLinesAfter": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Number of lines after the cursor (in the current file) to send as context."
+        },
+        "deepseekAutocomplete.includeOpenFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include short snippets from your other open editor tabs as extra context, similar to Copilot's 'neighboring tabs'. Helps DeepSeek match patterns, imports, and naming used elsewhere in your codebase."
+        },
+        "deepseekAutocomplete.maxContextFiles": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Maximum number of other open files to include as context (only used when includeOpenFiles is true). Files matching the current file's language are preferred."
+        },
+        "deepseekAutocomplete.maxContextCharsPerFile": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 0,
+          "maximum": 20000,
+          "description": "Maximum characters taken from each neighboring open file used as context."
+        },
+        "deepseekAutocomplete.disabledLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Language IDs to never show suggestions for (e.g. \"plaintext\", \"markdown\")."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.5.0"
+  }
+}
