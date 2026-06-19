@@ -21,6 +21,8 @@ export interface DeepSeekConfig {
   includeOpenFiles: boolean;
   maxContextFiles: number;
   maxContextCharsPerFile: number;
+  includeClipboard: boolean;
+  maxClipboardChars: number;
   disabledLanguages: string[];
 }
 
@@ -42,6 +44,8 @@ export function getConfig(): DeepSeekConfig {
     includeOpenFiles: cfg.get<boolean>('includeOpenFiles', true),
     maxContextFiles: cfg.get<number>('maxContextFiles', 3),
     maxContextCharsPerFile: cfg.get<number>('maxContextCharsPerFile', 1500),
+    includeClipboard: cfg.get<boolean>('includeClipboard', true),
+    maxClipboardChars: cfg.get<number>('maxClipboardChars', 2000),
     disabledLanguages: cfg.get<string[]>('disabledLanguages', []),
   };
 }

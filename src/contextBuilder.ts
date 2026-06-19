@@ -16,11 +16,11 @@ export interface PromptContext {
  * When enabled, snippets from other open tabs are prepended ahead of the
  * current file's prefix, similar to Copilot's "neighboring tabs" context.
  */
-export function buildContext(
+export async function buildContext(
   document: vscode.TextDocument,
   position: vscode.Position,
   cfg: DeepSeekConfig
-): PromptContext {
+): Promise<PromptContext> {
   const startLine = Math.max(0, position.line - cfg.contextLinesBefore);
   const endLine = Math.min(document.lineCount - 1, position.line + cfg.contextLinesAfter);
 
@@ -35,6 +35,13 @@ export function buildContext(
     const neighborContext = collectNeighborContext(document, cfg);
     if (neighborContext) {
       prefix = neighborContext + prefix;
+    }
+  }
+
+  if (cfg.includeClipboard && cfg.maxClipboardChars > 0) {
+    const clipboardContext = await collectClipboardContext(cfg);
+    if (clipboardContext) {
+      prefix = clipboardContext + prefix;
     }
   }
 
@@ -104,4 +111,24 @@ function collectNeighborContext(activeDocument: vscode.TextDocument, cfg: DeepSe
 
   const activePath = vscode.workspace.asRelativePath(activeDocument.uri, false);
   return snippets.join('\n\n') + `\n\n// File: ${activePath}\n`;
+}
+
+/**
+ * Reads the system clipboard and wraps it as a commented context block.
+ * Only text content is included; binary or non-text clipboard data is ignored.
+ */
+async function collectClipboardContext(cfg: DeepSeekConfig): Promise<string> {
+  try {
+    const text = await vscode.env.clipboard.readText();
+    if (!text || !text.trim()) {
+      return '';
+    }
+    const clipped = text.length > cfg.maxClipboardChars
+      ? text.slice(0, cfg.maxClipboardChars) + '\n// [clipboard truncated]'
+      : text;
+    return `// Clipboard:\n${clipped}\n\n`;
+  } catch {
+    // Clipboard may be empty, inaccessible, or contain non-text data.
+    return '';
+  }
 }
