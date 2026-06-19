@@ -1,7 +1,7 @@
 {
   "name": "deepseek-autocomplete",
   "displayName": "DeepSeek Autocomplete",
-  "description": "Inline AI code suggestions powered by the DeepSeek API \u2014 ghost-text completions like GitHub Copilot, but using your own DeepSeek key.",
+  "description": "Inline AI code suggestions powered by the DeepSeek API - ghost-text completions like GitHub Copilot, but using your own DeepSeek key.",
   "version": "0.1.1",
   "publisher": "local-dev",
   "license": "MIT",
@@ -62,7 +62,7 @@
         "deepseekAutocomplete.model": {
           "type": "string",
           "default": "deepseek-v4-flash",
-          "markdownDescription": "Which DeepSeek model to request completions from.\n\n- `deepseek-v4-flash` \u2014 fast and cheap, recommended for inline autocomplete.\n- `deepseek-v4-pro` \u2014 higher quality, slower and more expensive, useful if you want stronger suggestions and don't mind extra latency.\n\nLegacy names `deepseek-chat` / `deepseek-reasoner` still work but are scheduled for retirement by DeepSeek and currently just alias to `deepseek-v4-flash`."
+          "markdownDescription": "Which DeepSeek model to request completions from.\n\n- `deepseek-v4-flash` - fast and cheap, recommended for inline autocomplete.\n- `deepseek-v4-pro` - higher quality, slower and more expensive, useful if you want stronger suggestions and don't mind extra latency.\n\nLegacy names `deepseek-chat` / `deepseek-reasoner` still work but are scheduled for retirement by DeepSeek and currently just alias to `deepseek-v4-flash`."
         },
         "deepseekAutocomplete.baseUrl": {
           "type": "string",
@@ -85,7 +85,7 @@
         "deepseekAutocomplete.enableThinking": {
           "type": "boolean",
           "default": false,
-          "description": "Only used when completionMode is 'chat'. DeepSeek V4 has 'thinking mode' on by default, which adds noticeable latency and cost \u2014 keep this off for snappy inline suggestions. Has no effect in 'fim' mode."
+          "description": "Only used when completionMode is 'chat'. DeepSeek V4 has 'thinking mode' on by default, which adds noticeable latency and cost - keep this off for snappy inline suggestions. Has no effect in 'fim' mode."
         },
         "deepseekAutocomplete.maxTokens": {
           "type": "number",

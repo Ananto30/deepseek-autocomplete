@@ -91,7 +91,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
       return this.toItems(cleaned, position);
     } catch (err) {
       if (controller.signal.aborted && !cfg.disabledLanguages.includes(document.languageId)) {
-        // Either we timed out or the user kept typing \u2014 either way, not a
+        // Either we timed out or the user kept typing - either way, not a
         // real error worth surfacing.
         this.statusBar.setReady();
         return undefined;

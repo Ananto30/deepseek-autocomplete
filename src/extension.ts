@@ -90,6 +90,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export function deactivate(): void {
-  // Nothing to clean up explicitly \u2014 everything is registered via
+  // Nothing to clean up explicitly - everything is registered via
   // context.subscriptions and disposed automatically by VS Code.
 }

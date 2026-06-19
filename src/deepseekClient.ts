@@ -52,7 +52,7 @@ export class DeepSeekClient {
       'text that should be inserted at the cursor so that BEFORE + your completion + ' +
       'AFTER reads as correct, idiomatic code. Never repeat BEFORE or AFTER. Never use ' +
       'markdown code fences. Never add explanations, comments about your reasoning, or ' +
-      `surrounding prose \u2014 output raw code only. File: ${ctx.filePath} (language: ${ctx.languageId}).`;
+      `surrounding prose - output raw code only. File: ${ctx.filePath} (language: ${ctx.languageId}).`;
 
     const userPrompt = `BEFORE:\n${ctx.prefix}\n\nAFTER:\n${ctx.suffix}\n\nINSERT:`;
 
