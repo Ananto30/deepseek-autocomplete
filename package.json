@@ -2,7 +2,7 @@
   "name": "deepseek-autocomplete",
   "displayName": "DeepSeek Autocomplete",
   "description": "Inline AI code suggestions powered by the DeepSeek API \u2014 ghost-text completions like GitHub Copilot, but using your own DeepSeek key.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "local-dev",
   "license": "MIT",
   "engines": {
@@ -147,6 +147,18 @@
           "minimum": 0,
           "maximum": 20000,
           "description": "Maximum characters taken from each neighboring open file used as context."
+        },
+        "deepseekAutocomplete.includeClipboard": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the current system clipboard content as extra context, prepended ahead of the current file. Useful when you've copied relevant code, API signatures, or reference snippets."
+        },
+        "deepseekAutocomplete.maxClipboardChars": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 0,
+          "maximum": 50000,
+          "description": "Maximum characters taken from the clipboard when includeClipboard is enabled."
         },
         "deepseekAutocomplete.disabledLanguages": {
           "type": "array",

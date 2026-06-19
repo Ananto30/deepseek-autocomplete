@@ -35,6 +35,12 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
       return undefined;
     }
 
+    // Only provide suggestions in actual editor files (file:// or untitled:),
+    // not in extension UIs like chat windows, output panels, webviews, etc.
+    if (document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled') {
+      return undefined;
+    }
+
     const apiKey = await getApiKey(this.context);
     if (!apiKey) {
       // The status bar already advertises "needs API key"; stay quiet here
@@ -51,7 +57,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
       }
     }
 
-    const promptCtx = buildContext(document, position, cfg);
+    const promptCtx = await buildContext(document, position, cfg);
 
     // Cache key: enough of the trailing prefix + leading suffix to be a
     // reasonable fingerprint of "the same edit point", without hashing the
