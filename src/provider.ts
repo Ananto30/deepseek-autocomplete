@@ -65,7 +65,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
     // entire (possibly large) context on every keystroke.
     const cacheKey = `${cfg.model}|${cfg.completionMode}|${promptCtx.prefix.slice(-800)}|${promptCtx.suffix.slice(0, 200)}`;
     if (this.lastCacheKey === cacheKey && this.lastCacheValue !== undefined) {
-      return this.toItems(this.lastCacheValue, position);
+      return this.toItems(this.lastCacheValue, position, promptCtx.replaceRange);
     }
 
     const controller = new AbortController();
@@ -81,7 +81,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
         return undefined;
       }
 
-      const cleaned = this.postProcess(completion, document, position);
+      const cleaned = this.postProcess(completion, document, position, promptCtx.replaceRange);
       this.lastCacheKey = cacheKey;
       this.lastCacheValue = cleaned;
       this.statusBar.setReady();
@@ -89,7 +89,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
       if (!cleaned) {
         return undefined;
       }
-      return this.toItems(cleaned, position);
+      return this.toItems(cleaned, position, promptCtx.replaceRange);
     } catch (err) {
       if (controller.signal.aborted && !cfg.disabledLanguages.includes(document.languageId)) {
         // Either we timed out or the user kept typing - either way, not a
@@ -110,10 +110,18 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
   /**
    * Trims an obvious case where the model echoes back text that's already
    * sitting right after the cursor (a common FIM/completion failure mode).
+   *
+   * In rename-replacement mode (replaceRange is set) the completion should
    */
-  private postProcess(text: string, document: vscode.TextDocument, position: vscode.Position): string {
+  private postProcess(text: string, document: vscode.TextDocument, position: vscode.Position, replaceRange?: vscode.Range): string {
     if (!text) {
       return '';
+    }
+    if (replaceRange) {
+      // Take only the leading identifier token — prevents "getUser(param)" when
+      // "(param)" is already in the suffix after the replaced word.
+      const match = text.match(/^([A-Za-z_$][A-Za-z0-9_$]*)/);
+      return match ? match[1] : text.split(/[\s(,;)]/)[0] ?? text;
     }
     const restOfLine = document.lineAt(position.line).text.slice(position.character);
     if (restOfLine.trim().length > 0 && text.endsWith(restOfLine)) {
@@ -122,8 +130,8 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
     return text;
   }
 
-  private toItems(text: string, position: vscode.Position): vscode.InlineCompletionItem[] {
-    const range = new vscode.Range(position, position);
+  private toItems(text: string, position: vscode.Position, replaceRange?: vscode.Range): vscode.InlineCompletionItem[] {
+    const range = replaceRange ?? new vscode.Range(position, position);
     return [new vscode.InlineCompletionItem(text, range)];
   }
 }

@@ -9,6 +9,12 @@ export interface PromptContext {
   suffix: string;
   languageId: string;
   filePath: string;
+  /**
+   * When the user has a recently-renamed identifier selected, this is the
+   * range of that selection so the inline completion replaces the whole word
+   * rather than inserting at the cursor.
+   */
+  replaceRange?: vscode.Range;
 }
 
 /**
@@ -36,12 +42,36 @@ export async function buildContext(
   const suffixRange = new vscode.Range(position, new vscode.Position(endLine, lastLineLength));
 
   let prefix = document.getText(prefixRange);
-  const suffix = document.getText(suffixRange);
+  let suffix = document.getText(suffixRange);
 
   // Contextual annotations — prepended innermost-first so they sit immediately
   // before the current file code where the model can use them most directly.
   const recentEdits = editTracker?.getRecentEdits(document.uri) ?? [];
   const editCtx = buildEditHistoryContext(document, recentEdits);
+
+  // Rename-replacement mode: when the user has selected (e.g. double-clicked)
+  // an identifier that appears in the edit history as a renamed symbol, recompute
+  // prefix/suffix around the selection so FIM is asked "what replaces X?" rather
+  // than "what inserts before/after X?".
+  let replaceRange: vscode.Range | undefined;
+  if (recentEdits.length > 0) {
+    const editor = vscode.window.activeTextEditor;
+    const sel = editor?.selection;
+    if (sel && !sel.isEmpty && editor?.document.uri.toString() === document.uri.toString()) {
+      const selectedText = document.getText(sel);
+      if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(selectedText)) {
+        const renames = extractIdentifierRenames(recentEdits);
+        if (renames.some(r => r.from === selectedText)) {
+          replaceRange = new vscode.Range(sel.start, sel.end);
+          // Recompute prefix/suffix around the selection regardless of which
+          // end the cursor is at (handles both left-to-right and right-to-left
+          // selection, plus double-click where cursor lands at the end).
+          prefix = document.getText(new vscode.Range(new vscode.Position(startLine, 0), sel.start));
+          suffix = document.getText(new vscode.Range(sel.end, new vscode.Position(endLine, document.lineAt(endLine).text.length)));
+        }
+      }
+    }
+  }
   if (editCtx) {
     prefix = editCtx + prefix;
   }
@@ -70,6 +100,7 @@ export async function buildContext(
     suffix,
     languageId: document.languageId,
     filePath: vscode.workspace.asRelativePath(document.uri, false),
+    replaceRange,
   };
 }
 
