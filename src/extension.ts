@@ -1,13 +1,17 @@
 import * as vscode from 'vscode';
+import { EXT_ID, clearApiKey, getApiKey, getConfig, setApiKey } from './config';
+import { EditTracker } from './editTracker';
 import { DeepSeekInlineProvider } from './provider';
 import { StatusBar } from './statusBar';
-import { EXT_ID, clearApiKey, getApiKey, getConfig, setApiKey } from './config';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const statusBar = new StatusBar();
   context.subscriptions.push(statusBar);
 
-  const provider = new DeepSeekInlineProvider(context, statusBar);
+  const editTracker = new EditTracker();
+  context.subscriptions.push(editTracker);
+
+  const provider = new DeepSeekInlineProvider(context, statusBar, editTracker);
   context.subscriptions.push(
     vscode.languages.registerInlineCompletionItemProvider({ pattern: '**' }, provider)
   );

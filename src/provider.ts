@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { DeepSeekClient } from './deepseekClient';
-import { buildContext } from './contextBuilder';
 import { getApiKey, getConfig } from './config';
+import { buildContext } from './contextBuilder';
+import { DeepSeekClient } from './deepseekClient';
+import type { EditTracker } from './editTracker';
 import { StatusBar } from './statusBar';
 
 /**
@@ -18,7 +19,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
   private lastCacheKey: string | undefined;
   private lastCacheValue: string | undefined;
 
-  constructor(private readonly context: vscode.ExtensionContext, private readonly statusBar: StatusBar) {}
+  constructor(private readonly context: vscode.ExtensionContext, private readonly statusBar: StatusBar, private readonly editTracker: EditTracker) { }
 
   async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -57,7 +58,7 @@ export class DeepSeekInlineProvider implements vscode.InlineCompletionItemProvid
       }
     }
 
-    const promptCtx = await buildContext(document, position, cfg);
+    const promptCtx = await buildContext(document, position, cfg, this.editTracker);
 
     // Cache key: enough of the trailing prefix + leading suffix to be a
     // reasonable fingerprint of "the same edit point", without hashing the
